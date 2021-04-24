@@ -1,5 +1,5 @@
 # OHSU-U01-HPP-2021
-MATLAB source code and pre-processed data for analysis of in vivo placental T2* mapping in pregnant human study participants
+MATLAB source code and post-processed MRI data for analysis of in vivo placental T2* mapping in pregnant human study participants
 
 Research was supported by the NICHD Human Placenta Project U01 HD087182 (Frias)
 
