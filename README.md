@@ -11,7 +11,7 @@ Add all .m files to the MATLAB path and save.
 
 ## Instructions for use
 
-(1) Download the post-processed study data file "U01_postprocessed_data.mat" (https://www.dropbox.com/s/n5g3q6lo1r1nh88/U01_postprocessed_data.mat?dl=0) 
+(1) Download the post-processed study data file [U01_postprocessed_data.mat](https://www.dropbox.com/s/n5g3q6lo1r1nh88/U01_postprocessed_data.mat?dl=0) 
 
 (2) Load study data into the MATLAB workspace (```load U01_postprocessed_data```). The data file is approximately 1.3GB in size, so this may take a couple of minutes to complete. 
 
