@@ -17,7 +17,7 @@ function [plotHandles,out] = compareModelFits(xx,yy,masks,model,guess,ww,labels)
     if (length(masks)<4)
         cmap = [0 0 1;1 0 0;0 1 0];
     else
-        cmap = Colormap.rgb(length(masks));
+        cmap = rgb(length(masks));
     end
     
     symbols = {'o','o','o','^','v','*'};
