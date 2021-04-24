@@ -7,7 +7,7 @@ This code was developed and tested on both Mac OS 10.15.7 and Ubuntu Linux using
 
 ## Installation
 
-Add all .m files to the MATLAB path and save.
+Add all .m files in the ```src``` directory to the MATLAB path and save.
 
 ## Instructions for use
 
