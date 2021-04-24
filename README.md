@@ -21,5 +21,13 @@ Add all .m files in the ```src``` directory to the MATLAB path and save.
 
 (5) Comment out the line ```exportFiles = false;``` if you want EPS figures and XLSX output to be saved
 
-(6) Run ```analyzeHumanT2starData``` in the MATLAB command window. This will take a few minutes and open a large number of figure windows, reproducing all figures in the manuscript as well as a number of figures containing supporting information. 
+(6) Run ```analyzeHumanT2starData``` in the MATLAB command window. This will take a few minutes and open 57 figure windows, reproducing figures 3-6 from the manuscript as well as a number of figures containing supporting information. Specifically (denoting manuscript figure number x, panel y as MFx.y and output figure z as Fz):
+  
+  * F7 -> MF1.A and MF1.C
+  * F8 -> MF1.B
+  * F31 -> MF1.D and MF1.F
+  * F32 -> MF1.E
+  * F51 -> MF4
+  * F54 -> MF5
+  * F34-F37, F39-F42, F44-F47 -> MF6
 
