@@ -1,6 +1,6 @@
 # OHSU-U01-HPP-2021
 MATLAB source code and post-processed MRI data for analysis of in vivo placental T2* mapping in pregnant human study participants as described
-in the following prepring, currently in peer-review: [Assessing placental function across gestation: a multi-institutional study of BOLD-MRI for the prediction of adverse pregnancy outcomes](https://www.researchsquare.com/article/rs-406266/v1). A recent presentation on this project at the 2021 NIH Human Placenta Project Meeting can be found at 1:36:00 [here](https://videocast.nih.gov/watch=42033?jwsource=cl) and the PowerPoint slides for that presentation can be downloaded [here](https://www.dropbox.com/s/0bf2u1jhlm2yalr/202105%20HPP.pptx?dl=0).
+in the following prepring, currently in peer-review: [Assessing placental function across gestation: a multi-institutional study of BOLD-MRI for the prediction of adverse pregnancy outcomes](https://www.researchsquare.com/article/rs-406266/v1). A presentation on this project at the 2021 NIH Human Placenta Project Meeting can be found at 1:36:00 [here](https://videocast.nih.gov/watch=42033?jwsource=cl) and the PowerPoint slides for that presentation can be downloaded [here](https://www.dropbox.com/s/0bf2u1jhlm2yalr/202105%20HPP.pptx?dl=0).
 
 Research was supported by the NICHD Human Placenta Project U01 HD087182 (Frias)
 
