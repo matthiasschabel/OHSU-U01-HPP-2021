@@ -2,11 +2,38 @@
 exportFiles = true;
 exportFiles = false;
 
+% rootDirectory = '/group_shares/frias/bulk/Studies/U01';
 rootDirectory = '/Volumes/Data/U01';
 
-figureDirectory = [rootDirectory '/Figures'];
-% figureDirectory = [rootDirectory '/Figures_quality_masked'];
-% figureDirectory = [rootDirectory '/Figures_all_data'];
+correctUtahIUGRBug = false;
+% correctUtahIUGRBug = true;
+
+includeIUGR = true;
+includeIUGR = false;
+
+includeBCNatal = true;
+includeBCNatal = false;
+
+if (includeIUGR)
+    outputSuffix = '_IUGR';
+else
+    outputSuffix = '';
+end
+
+if (exportFiles)
+    % outputDirectory = [rootDirectory '/Figures'];
+    % figureDirectory = [rootDirectory '/Figures_quality_masked'];
+    % figureDirectory = [rootDirectory '/Figures_all_data'];
+
+    outputDirectory = [rootDirectory '/Output'];
+%     outputDirectory = [rootDirectory '/Output_1_slice'];
+
+    outputDirectory = [outputDirectory outputSuffix];
+
+    if (~exist(outputDirectory,'dir'))
+        mkdir(outputDirectory);
+    end
+end
 
 % get adjudication groups/severity from REDCap
 %   -2 is invalid/unrecorded value, -1 is abnormal, 0 is uncomplicated, 1 is adverse
@@ -22,8 +49,13 @@ qualityMask = true(size(category));
 % qualityMask = (qualityMetricROI >= quantile(qualityMetricROI,0.1) & ...
 %                uncertaintyMetricT2s <= quantile(uncertaintyMetricT2s,0.9));
 
-iugrMask = ((studyIDs>=600 & studyIDs<700) | siteNumber==3);                    
-% iugrMask = ((studyIDs>=600 & studyIDs<700) | siteNumber==3) & category == 1;
+% 20220429 MCS BUG : 
+%   accidentally passed through three Utah IUGR studies : 802, 807, & 808 
+if (correctUtahIUGRBug)
+    iugrMask = (siteNumber==1&studyIDs>=600)|(siteNumber==2&studyIDs>=800)|(siteNumber==3&category==1);
+else
+    iugrMask = ((studyIDs>=600 & studyIDs<700) | (siteNumber==3 & category==1));  
+end
 
 sgaStudyIDs = [201 272 282 320 345 349 351 378 603 604 605 607 608 610 611 614 407 490 527 801 802 808];
 
@@ -34,9 +66,17 @@ for idx=1:length(sgaStudyIDs)
 end
 
 % preMask = true(size(category));
-% preMask = qualityMask;
-% preMask = qualityMask & siteNumber ~= 3;
-preMask = qualityMask & ~iugrMask & siteNumber ~= 3;    % exclude all BCNatal and IUGR studies
+
+if (includeIUGR)
+%     preMask = qualityMask;
+    preMask = qualityMask;
+else
+    preMask = qualityMask & ~iugrMask;    % exclude IUGR studies
+end
+
+if (~includeBCNatal)
+    preMask = preMask & siteNumber ~=3;
+end
 
 controlMask = category==0 & preMask;
 adverseMask = category==1 & preMask;
@@ -106,7 +146,7 @@ xlabel('Gestational weeks');
 ylabel('T2* shift (ms)');
 legend([ph{1}(2) ph{2}(2) ph{3}(2)],{'OHSU','Utah','Both'})
 if (exportFiles) 
-    exportfig(gcf,[figureDirectory '/SLN_shift_by_site.eps'],'Color','rgb');
+    exportfig(gcf,[outputDirectory '/SLN_shift_by_site.eps'],'Color','rgb');
 else
     pause(.1);
     drawnow;
@@ -120,7 +160,7 @@ xlabel('Gestational weeks');
 ylabel('T2* shift (ms)');
 legend([ph{1}(2) ph{2}(2) ph{3}(2)],{'Control','Adverse','Abnormal'})
 if (exportFiles) 
-    exportfig(gcf,[figureDirectory '/SLN_shift_by_category.eps'],'Color','rgb');
+    exportfig(gcf,[outputDirectory '/SLN_shift_by_category.eps'],'Color','rgb');
 else
     pause(.1);
     drawnow;
@@ -134,7 +174,7 @@ xlabel('Gestational weeks');
 ylabel('T2* \mu (ms)');
 legend([ph{1}(2) ph{2}(2) ph{3}(2)],{'OHSU','Utah','Both'})
 if (exportFiles) 
-    exportfig(gcf,[figureDirectory '/SLN_mu_by_site.eps'],'Color','rgb');
+    exportfig(gcf,[outputDirectory '/SLN_mu_by_site.eps'],'Color','rgb');
 else
     pause(.1);
     drawnow;
@@ -148,7 +188,7 @@ xlabel('Gestational weeks');
 ylabel('T2* \mu (ms)');
 legend([ph{1}(2) ph{2}(2) ph{3}(2)],{'Control','Adverse','Abnormal'})
 if (exportFiles) 
-    exportfig(gcf,[figureDirectory '/SLN_mu_by_category.eps'],'Color','rgb');
+    exportfig(gcf,[outputDirectory '/SLN_mu_by_category.eps'],'Color','rgb');
 else
     pause(.1);
     drawnow;
@@ -162,7 +202,7 @@ xlabel('Gestational weeks');
 ylabel('T2* \sigma (ms)');
 legend([ph{1}(2) ph{2}(2) ph{3}(2)],{'OHSU','Utah','Both'})
 if (exportFiles) 
-    exportfig(gcf,[figureDirectory '/SLN_sigma_by_site.eps'],'Color','rgb');
+    exportfig(gcf,[outputDirectory '/SLN_sigma_by_site.eps'],'Color','rgb');
 else
     pause(.1);
     drawnow;
@@ -176,7 +216,7 @@ xlabel('Gestational weeks');
 ylabel('T2* \sigma (ms)');
 legend([ph{1}(2) ph{2}(2) ph{3}(2)],{'Control','Adverse','Abnormal'})
 if (exportFiles) 
-    exportfig(gcf,[figureDirectory '/SLN_sigma_by_category.eps'],'Color','rgb');
+    exportfig(gcf,[outputDirectory '/SLN_sigma_by_category.eps'],'Color','rgb');
 else
     pause(.1);
     drawnow;
@@ -191,7 +231,7 @@ xlabel('Gestational weeks');
 ylabel('T2* (ms)');
 legend([ph{1}(2) ph{2}(2) ph{3}(2)],{'OHSU','Utah','Both'})
 if (exportFiles) 
-    exportfig(gcf,[figureDirectory '/median_T2s_by_site.eps'],'Color','rgb');
+    exportfig(gcf,[outputDirectory '/median_T2s_by_site.eps'],'Color','rgb');
 else
     pause(.1);
     drawnow;
@@ -206,7 +246,37 @@ xlabel('Gestational weeks');
 ylabel('T2* (ms)');
 legend([ph{1}(2) ph{2}(2) ph{3}(2)],{'Control','Adverse','Abnormal'})
 if (exportFiles) 
-    exportfig(gcf,[figureDirectory '/median_T2s_by_category.eps'],'Color','rgb');
+    exportfig(gcf,[outputDirectory '/median_T2s_by_category.eps'],'Color','rgb');
+else
+    pause(.1);
+    drawnow;
+end
+
+% fit sigmoid directly to measured T2* vs. gestational week data for OHSU by control/adverse/abnormal
+figure;
+[ph,ohsuCategoryFit.T2s] = compareModelFits(gestationalDay/7,medianT2s,ohsuCategoryMasks,sigmoid,sigmoidGuessT2s);
+set(gca,'xlim',[10 40],'ylim',[0 120]);
+title('T2* by category (OHSU)');
+xlabel('Gestational weeks');
+ylabel('T2* (ms)');
+legend([ph{1}(2) ph{2}(2) ph{3}(2)],{'Control','Adverse','Abnormal'})
+if (exportFiles) 
+    exportfig(gcf,[outputDirectory '/median_T2s_by_category_OHSU.eps'],'Color','rgb');
+else
+    pause(.1);
+    drawnow;
+end
+
+% fit sigmoid directly to measured T2* vs. gestational week data for Utah by control/adverse/abnormal
+figure;
+[ph,utahCategoryFit.T2s] = compareModelFits(gestationalDay/7,medianT2s,utahCategoryMasks,sigmoid,sigmoidGuessT2s);
+set(gca,'xlim',[10 40],'ylim',[0 120]);
+title('T2* by category (Utah)');
+xlabel('Gestational weeks');
+ylabel('T2* (ms)');
+legend([ph{1}(2) ph{2}(2) ph{3}(2)],{'Control','Adverse','Abnormal'})
+if (exportFiles) 
+    exportfig(gcf,[outputDirectory '/median_T2s_by_category_Utah.eps'],'Color','rgb');
 else
     pause(.1);
     drawnow;
@@ -221,7 +291,7 @@ xlabel('Gestational weeks');
 ylabel('T2* (ms)');
 legend([ph{1}(2) ph{2}(2)],{'OHSU','Utah'});
 if (exportFiles) 
-    exportfig(gcf,[figureDirectory '/median_T2s_adverse_by_site.eps'],'Color','rgb');
+    exportfig(gcf,[outputDirectory '/median_T2s_adverse_by_site.eps'],'Color','rgb');
 else
     pause(.1);
     drawnow;
@@ -236,7 +306,7 @@ xlabel('Gestational weeks');
 ylabel('T2* (ms)');
 legend([ph{1}(2) ph{2}(2)],{'Male','Female'})
 if (exportFiles) 
-    exportfig(gcf,[figureDirectory '/median_T2s_by_fetal_sex.eps'],'Color','rgb');
+    exportfig(gcf,[outputDirectory '/median_T2s_by_fetal_sex.eps'],'Color','rgb');
 else
     pause(.1);
     drawnow;
@@ -251,7 +321,7 @@ xlabel('Gestational weeks');
 ylabel('T2* (ms)');
 legend([ph{1}(2) ph{2}(2) ph{3}(2)],{'Control','Adverse','Abnormal'})
 if (exportFiles) 
-    exportfig(gcf,[figureDirectory '/median_T2s_by_category_including_IUGR_and_BCN.eps'],'Color','rgb');
+    exportfig(gcf,[outputDirectory '/median_T2s_by_category_including_IUGR_and_BCN.eps'],'Color','rgb');
 else
     pause(.1);
     drawnow;
@@ -266,7 +336,7 @@ xlabel('Gestational weeks');
 ylabel('T2* (ms)');
 legend([ph{1}(2) ph{2}(2) ph{3}(2)],{'Control','Adverse','Abnormal'})
 if (exportFiles) 
-    exportfig(gcf,[figureDirectory '/median_T2s_by_category_underweight_repeat_scans.eps'],'Color','rgb');
+    exportfig(gcf,[outputDirectory '/median_T2s_by_category_underweight_repeat_scans.eps'],'Color','rgb');
 else
     pause(.1);
     drawnow;
@@ -281,7 +351,7 @@ xlabel('Gestational weeks');
 ylabel('T2* (ms)');
 legend([ph{1}(2) ph{2}(2)],{'Mild','Severe'})
 if (exportFiles) 
-    exportfig(gcf,[figureDirectory '/median_T2s_by_severity.eps'],'Color','rgb');
+    exportfig(gcf,[outputDirectory '/median_T2s_by_severity.eps'],'Color','rgb');
 else
     pause(.1);
     drawnow;
@@ -296,7 +366,7 @@ xlabel('Gestational weeks');
 ylabel('T2* (ms)');
 legend([ph{1}(2) ph{2}(2) ph{3}(2) ph{4}(2)],{'Underweight','Normal','Overweight','Obese'})
 if (exportFiles) 
-    exportfig(gcf,[figureDirectory '/median_T2s_by_BMI.eps'],'Color','rgb');
+    exportfig(gcf,[outputDirectory '/median_T2s_by_BMI.eps'],'Color','rgb');
 else
     pause(.1);
     drawnow;
@@ -338,7 +408,7 @@ xlabel('Gestational weeks');
 ylabel('T2* (ms)');
 legend([ph{1}(2) ph{2}(2)],{'Age<35','Age>=35 (AMA)'})
 if (exportFiles) 
-    exportfig(gcf,[figureDirectory '/median_T2s_by_AMA.eps'],'Color','rgb');
+    exportfig(gcf,[outputDirectory '/median_T2s_by_AMA.eps'],'Color','rgb');
 else
     pause(.1);
     drawnow;
@@ -353,7 +423,7 @@ xlabel('Gestational weeks');
 ylabel('T2* (ms)');
 legend([ph{1}(2) ph{2}(2) ph{3}(2)],{'>10%','<=10%','<=5%'})
 if (exportFiles) 
-    exportfig(gcf,[figureDirectory '/median_T2s_by_birthweightPercentile.eps'],'Color','rgb');
+    exportfig(gcf,[outputDirectory '/median_T2s_by_birthweightPercentile.eps'],'Color','rgb');
 else
     pause(.1);
     drawnow;
@@ -368,7 +438,7 @@ xlabel('Gestational weeks');
 ylabel('Hb (mg/dl)');
 legend([ph{1}(2) ph{2}(2) ph{3}(2)],{'OHSU','Utah','Both'})
 if (exportFiles) 
-    exportfig(gcf,[figureDirectory '/Hb_by_site.eps'],'Color','rgb');
+    exportfig(gcf,[outputDirectory '/Hb_by_site.eps'],'Color','rgb');
 else
     pause(.1);
     drawnow;
@@ -383,7 +453,7 @@ xlabel('Gestational weeks');
 ylabel('Hb (mg/dl)');
 legend([ph{1}(2) ph{2}(2) ph{3}(2)],{'Control','Adverse','Abnormal'})
 if (exportFiles) 
-    exportfig(gcf,[figureDirectory '/Hb_by_category.eps'],'Color','rgb');
+    exportfig(gcf,[outputDirectory '/Hb_by_category.eps'],'Color','rgb');
 else
     pause(.1);
     drawnow;
@@ -397,7 +467,7 @@ xlabel('Gestational weeks');
 ylabel('Placental volume (cm^3)');
 legend([ph{1}(2) ph{2}(2) ph{3}(2)],{'OHSU','Utah','Both'})
 if (exportFiles) 
-    exportfig(gcf,[figureDirectory '/placental_volume_by_site.eps'],'Color','rgb');
+    exportfig(gcf,[outputDirectory '/placental_volume_by_site.eps'],'Color','rgb');
 else
     pause(.1);
     drawnow;
@@ -411,7 +481,7 @@ xlabel('Gestational weeks');
 ylabel('Placental volume (cm^3)');
 legend([ph{1}(2) ph{2}(2) ph{3}(2)],{'Control','Adverse','Abnormal'})
 if (exportFiles) 
-    exportfig(gcf,[figureDirectory '/placental_volume_by_category.eps'],'Color','rgb');
+    exportfig(gcf,[outputDirectory '/placental_volume_by_category.eps'],'Color','rgb');
 else
     pause(.1);
     drawnow;
@@ -426,7 +496,7 @@ xlabel('Gestational weeks');
 ylabel('Maternal SpO_2 (%)');
 legend([ph{1}(2) ph{2}(2) ph{3}(2)],{'OHSU','Utah','Both'})
 if (exportFiles) 
-    exportfig(gcf,[figureDirectory '/maternal_SpO2_by_site.eps'],'Color','rgb');
+    exportfig(gcf,[outputDirectory '/maternal_SpO2_by_site.eps'],'Color','rgb');
 else
     pause(.1);
     drawnow;
@@ -441,7 +511,7 @@ xlabel('Gestational weeks');
 ylabel('Maternal SpO_2 (%)');
 legend([ph{1}(2) ph{2}(2) ph{3}(2)],{'Control','Adverse','Abnormal'})
 if (exportFiles) 
-    exportfig(gcf,[figureDirectory '/maternal_SpO2_by_category.eps'],'Color','rgb');
+    exportfig(gcf,[outputDirectory '/maternal_SpO2_by_category.eps'],'Color','rgb');
 else
     pause(.1);
     drawnow;
@@ -455,7 +525,7 @@ xlabel('Gestational weeks');
 ylabel('T1 (ms)');
 legend([ph{1}(2) ph{2}(2) ph{3}(2)],{'Control','Adverse','Abnormal'})
 if (exportFiles) 
-    exportfig(gcf,[figureDirectory '/median_T1_by_category.eps'],'Color','rgb');
+    exportfig(gcf,[outputDirectory '/median_T1_by_category.eps'],'Color','rgb');
 else
     pause(.1);
     drawnow;
@@ -469,7 +539,7 @@ xlabel('T2* (ms)');
 ylabel('T1 (ms)');
 legend([ph{1}(2) ph{2}(2) ph{3}(2)],{'Control','Adverse','Abnormal'})
 if (exportFiles) 
-    exportfig(gcf,[figureDirectory '/median_T1_vs_median_T2s_by_category.eps'],'Color','rgb');
+    exportfig(gcf,[outputDirectory '/median_T1_vs_median_T2s_by_category.eps'],'Color','rgb');
 else
     pause(.1);
     drawnow;
@@ -535,7 +605,7 @@ xlabel('Gestational weeks');
 ylabel('v_{mpb}');
 legend(ph(1:5),{'5th percentile','25th percentile','50th percentile','75th percentile','95th percentile'});
 if (exportFiles) 
-    exportfig(gcf,[figureDirectory '/v_mp_estimate_Monte_Carlo.eps'],'Color','rgb');
+    exportfig(gcf,[outputDirectory '/v_mp_estimate_Monte_Carlo.eps'],'Color','rgb');
 else
     pause(.1);
     drawnow;
@@ -575,7 +645,7 @@ xlabel('Gestational weeks');
 ylabel('T2* (ms)');
 legend([ph(1) ph(2)],{'uncorrected','corrected'});
 if (exportFiles) 
-    exportfig(gcf,[figureDirectory '/median_T2s_correction.eps'],'Color','rgb');
+    exportfig(gcf,[outputDirectory '/median_T2s_correction.eps'],'Color','rgb');
 else
     pause(.1);
     drawnow;
@@ -591,7 +661,7 @@ xlabel('Gestational weeks');
 ylabel('T2* (ms)');
 legend([ph{1}(2) ph{2}(2)],{'OHSU','Utah, corrected'})
 if (exportFiles) 
-    exportfig(gcf,[figureDirectory '/median_T2s_by_site_corrected.eps'],'Color','rgb');
+    exportfig(gcf,[outputDirectory '/median_T2s_by_site_corrected.eps'],'Color','rgb');
 else
     pause(.1);
     drawnow;
@@ -606,7 +676,7 @@ xlabel('Gestational weeks');
 ylabel('T2* (ms)');
 legend([ph{1}(2) ph{2}(2) ph{3}(2)],{'Control, corrected','Adverse, corrected','Abnormal, corrected'})
 if (exportFiles) 
-    exportfig(gcf,[figureDirectory '/median_T2s_by_category_corrected.eps'],'Color','rgb');
+    exportfig(gcf,[outputDirectory '/median_T2s_by_category_corrected.eps'],'Color','rgb');
 else
     pause(.1);
     drawnow;
@@ -636,7 +706,7 @@ ylabel('T2* (ms)');
 legend(ph,{'OHSU, uncorrected','OHSU, corrected',...
            'Utah, uncorrected','Utah, corrected'})
 if (exportFiles) 
-    exportfig(gcf,[figureDirectory '/median_T2s_by_site_corrected_vs_uncorrected.eps'],'Color','rgb');
+    exportfig(gcf,[outputDirectory '/median_T2s_by_site_corrected_vs_uncorrected.eps'],'Color','rgb');
 else
     pause(.1);
     drawnow;
@@ -654,60 +724,11 @@ legend(ph,{'Control, uncorrected','Control, corrected',...
            'Adverse, uncorrected','Adverse, corrected',...
            'Abnormal, uncorrected','Abnormal, corrected'})
 if (exportFiles) 
-    exportfig(gcf,[figureDirectory '/median_T2s_by_category_corrected_vs_uncorrected.eps'],'Color','rgb');
+    exportfig(gcf,[outputDirectory '/median_T2s_by_category_corrected_vs_uncorrected.eps'],'Color','rgb');
 else
     pause(.1);
     drawnow;
 end
-
-% % generate correction curve for calibration between OHSU and Utah data using actual measured Hb and SpO2 values
-% vmpb0 = simulateMaternalPlacentalBloodVolume(gwfit,Hbfit,SpO2fit,T2sfit,1,0);       % simulate for observed site-specific T2*/[Hb]/SpO2 differences
-% 
-% % interpolate to gestational week
-% for gidx=1:length(medianT2s)
-%     gw = gestationalDay(gidx)/7;    
-%     v = interp1(gwfit,vmpb0,gw);
-%     
-%     dR2s(gidx) = v*20.2e-3*0.6206*(hemoglobin(gidx)*(100-SpO2Pre(gidx))/100 - Hbfit(1).f(Hbfit(1).beta,gw)*(100-SpO2fit(1).f(SpO2fit(1).beta,gw))/100);
-%     dR2sref(gidx) = v*20.2e-3*0.6206*(Hbfit(2).f(Hbfit(2).beta,gw)*(100-SpO2fit(2).f(SpO2fit(2).beta,gw))/100 - Hbfit(1).f(Hbfit(1).beta,gw)*(100-SpO2fit(1).f(SpO2fit(1).beta,gw))/100);
-%     
-%     T2s1(gidx) = T2sfit(1).f(T2sfit(1).beta,gw);
-%     T2s2(gidx) = T2sfit(2).f(T2sfit(2).beta,gw);
-% end
-% 
-% medianT2s_corrected = 1./(1./medianT2s-dR2s);
-% medianT2s_uncorrected = 1./(1./medianT2s-0*dR2s);   % would be the same as medianT2s except for availability of SpO2 and/or hemoglobin measurements
-% 
-% % apply T2s correction for maternal SpO2 and [Hb] and fit
-% [~,siteFit.T2s_corr] = compareModelFits(gestationalDay/7,medianT2s_corrected,siteMasks(1:2),sigmoid,sigmoidGuessT2s);
-% [~,categoryFit.T2s_corr] = compareModelFits(gestationalDay/7,medianT2s_corrected,categoryMasks,sigmoid,sigmoidGuessT2s);
-% 
-% [~,siteFit.T2s_uncorr] = compareModelFits(gestationalDay/7,medianT2s_uncorrected,siteMasks(1:2),sigmoid,sigmoidGuessT2s);
-% [~,categoryFit.T2s_uncorr] = compareModelFits(gestationalDay/7,medianT2s_uncorrected,categoryMasks,sigmoid,sigmoidGuessT2s);
-% 
-% figure;
-% ph = plot(siteFit.T2s_uncorr(1).x,siteFit.T2s_uncorr(1).fit,'b--',siteFit.T2s_corr(1).x,siteFit.T2s_corr(1).fit,'b',...
-%           siteFit.T2s_uncorr(2).x,siteFit.T2s_uncorr(2).fit,'r--',siteFit.T2s_corr(2).x,siteFit.T2s_corr(2).fit,'r');
-% set(gca,'ylim',[0 120]);
-% title('T2* by site, uncorrected vs. corrected ');
-% xlabel('Gestational weeks');
-% ylabel('T2* (ms)');
-% legend(ph,{'OHSU, uncorrected','OHSU, corrected',...
-%            'Utah, uncorrected','Utah, corrected'})
-% exportfig(gcf,[figureDirectory '/median_T2s_by_site_corrected_vs_uncorrected.eps'],'Color','rgb');
-% 
-% figure;
-% ph = plot(categoryFit.T2s_uncorr(1).x,categoryFit.T2s_uncorr(1).fit,'b--',categoryFit.T2s_corr(1).x,categoryFit.T2s_corr(1).fit,'b',...
-%           categoryFit.T2s_uncorr(2).x,categoryFit.T2s_uncorr(2).fit,'r--',categoryFit.T2s_corr(2).x,categoryFit.T2s_corr(2).fit,'r',...
-%           categoryFit.T2s_uncorr(3).x,categoryFit.T2s_uncorr(3).fit,'g--',categoryFit.T2s_corr(3).x,categoryFit.T2s_corr(3).fit,'g');
-% set(gca,'ylim',[0 120]);
-% title('T2* by category, uncorrected vs. corrected');
-% xlabel('Gestational weeks');
-% ylabel('T2* (ms)');
-% legend(ph,{'Control, uncorrected','Control, corrected',...
-%            'Adverse, uncorrected','Adverse, corrected',...
-%            'Abnormal, uncorrected','Abnormal, corrected'})
-% exportfig(gcf,[figureDirectory '/median_T2s_by_category_corrected_vs_uncorrected.eps'],'Color','rgb');
 
 % fit change in T2s with gestation within individual subjects
 siteDeltaMasks = { repmat(siteMasks{1},[2 1])', repmat(siteMasks{2},[2 1])', repmat(siteMasks{3},[2 1])' };
@@ -755,8 +776,20 @@ title('Intrapatient T2* gestational rate of change - normal pregnancies');
 xlabel('Gestational weeks');
 ylabel('dT2*/dGW (ms/week)');
 legend([ph{1}(2) ph{2}(2) ph{3}(2)],{'OHSU','Utah','Both'})
+
+% add line for derivative of T2s vs. gestational week fit
+hold on;
+h=plot(siteFit.deltaT2sdGW(3).x,siteFit.deltaT2sdGW(3).model(siteFit.T2s(3).p,siteFit.deltaT2sdGW(3).x),'k');
+hold off;
+set(h,'LineWidth',3);
+
+% overlay lines connecting individual study IDs
+hold on;
+plot(medianGD(categoryMasks{1},:)'/7,deltaT2s(categoryMasks{1},:)'./(deltaGD(categoryMasks{1},:)'/7),'k');
+hold off;
+
 if (exportFiles) 
-    exportfig(gcf,[figureDirectory '/dT2sdGW_by_site.eps'],'Color','rgb');
+    exportfig(gcf,[outputDirectory '/dT2sdGW_by_site.eps'],'Color','rgb');
 else
     pause(.1);
     drawnow;
@@ -782,8 +815,15 @@ title('Intrapatient T2* gestational rate of change - normal vs. adverse');
 xlabel('Gestational weeks');
 ylabel('dT2*/dGW (ms/week)');
 legend([ph{1}(2) ph{2}(2) ph{3}(2)],{'Normal','Adverse','Abnormal'})
+
+% add line for derivative of adverse T2s vs. gestational week fit
+hold on;
+h=plot(categoryFit.deltaT2sdGW(2).x,categoryFit.deltaT2sdGW(2).model(categoryFit.T2s(2).p,categoryFit.deltaT2sdGW(2).x),'k');
+hold off;
+set(h,'LineWidth',3);
+
 if (exportFiles) 
-    exportfig(gcf,[figureDirectory '/dT2sdGW_by_category.eps'],'Color','rgb');
+    exportfig(gcf,[outputDirectory '/dT2sdGW_by_category.eps'],'Color','rgb');
 else
     pause(.1);
     drawnow;
@@ -792,22 +832,23 @@ end
 gestationalWeek = floor(gestationalDay/7);
 gestationalTP = floor(gestationalDay/7/10);
 
-% convert T2* z-scores to T2* percentiles
-T2sPercentile = NaNs(size(medianT2s));
-
-for i=1:length(studyIDs) 
-    try
-        refT2s = medianT2s(gestationalWeek==gestationalWeek(i)&category==0);
-        T2sPercentile(i) = getQuantileValue(refT2s,medianT2s(i))*100;
-    catch e
-    end
-    
-    if (category(i)~=1)
-        continue;
-    end
-    
-    fprintf('%3d %8i Category %2d %5.1f %3.0f\n',studyIDs(i),studyDates(i),category(i),medianT2s(i),T2sPercentile(i)); 
-end
+% 20220210 MCS comment out 
+% % convert T2* z-scores to T2* percentiles
+% T2sPercentile = NaNs(size(medianT2s));
+% 
+% for i=1:length(studyIDs) 
+%     try
+%         refT2s = medianT2s(gestationalWeek==gestationalWeek(i)&category==0);
+%         T2sPercentile(i) = getQuantileValue(refT2s,medianT2s(i))*100;
+%     catch e
+%     end
+%     
+%     if (category(i)~=1)
+%         continue;
+%     end
+%     
+%     fprintf('%3d %8i Category %2d %5.1f %3.0f\n',studyIDs(i),studyDates(i),category(i),medianT2s(i),T2sPercentile(i)); 
+% end
 
 % organize T2* by studyID
 timepointData = struct();
@@ -844,8 +885,6 @@ rocDescription = 'Adverse only';
 rocMasks = {controlMask,adverseMask};
 ohsuRocMasks = {controlMask & ohsuMask,adverseMask & ohsuMask};
 utahRocMasks = {controlMask & utahMask,adverseMask & utahMask};
-% ohsuRocMasks = {controlMask,adverseMask & ohsuMask};
-% utahRocMasks = {controlMask,adverseMask & utahMask};
 
 % % ROC for predicting adverse pregnancy with low birthweight
 % rocDescription = 'Adverse and low birth weight';
@@ -865,6 +904,8 @@ utahRocMasks = {controlMask & utahMask,adverseMask & utahMask};
 % ohsuRocMasks = {ohsuMask & birthWeightPercentile>=10,ohsuMask & birthWeightPercentile<10};
 % utahRocMasks = {utahMask & birthWeightPercentile>=10,utahMask & birthWeightPercentile<10};
 
+rocs = [];
+
 for gidx=1:3
     figure;
     switch gidx
@@ -883,10 +924,12 @@ for gidx=1:3
         
     for gtpidx=0:3
         if (gtpidx == 0)
-            roc = generateROC(out,true(size(out(2).x)));
+            rocs{gidx} = generateROC(out,true(size(out(2).x)));
         else            
-            roc = generateROC(out,floor(out(2).x/10)==gtpidx);
+            rocs{gidx} = generateROC(out,floor(out(2).x/10)==gtpidx);
         end
+
+        roc = rocs{gidx};
         
         if (gtpidx==0)
             suffix = '_all';
@@ -907,9 +950,9 @@ for gidx=1:3
 
         if (exportFiles)
             switch gidx
-                case 1, exportfig(gcf,[figureDirectory '/ROC' suffix '_OHSU.eps'],'Color','rgb');
-                case 2, exportfig(gcf,[figureDirectory '/ROC' suffix '_Utah.eps'],'Color','rgb');
-                case 3, exportfig(gcf,[figureDirectory '/ROC' suffix '.eps'],'Color','rgb');
+                case 1, exportfig(gcf,[outputDirectory '/ROC' suffix '_OHSU.eps'],'Color','rgb');
+                case 2, exportfig(gcf,[outputDirectory '/ROC' suffix '_Utah.eps'],'Color','rgb');
+                case 3, exportfig(gcf,[outputDirectory '/ROC' suffix '.eps'],'Color','rgb');
                 otherwise error();
             end
         else
@@ -935,7 +978,7 @@ xlabel('Gestational weeks at MRI');
 ylabel('Number of studies');
 legend(ph,{'OHSU','Utah','Both'});
 if (exportFiles) 
-    exportfig(gcf,[figureDirectory '/MRI_enrollment_by_site.eps'],'Color','rgb');
+    exportfig(gcf,[outputDirectory '/MRI_enrollment_by_site.eps'],'Color','rgb');
 else
     pause(.1);
     drawnow;
@@ -954,47 +997,58 @@ xlabel('Gestational weeks at MRI');
 ylabel('Number of studies');
 legend(ph,{'Normal','Adverse','Abnormal'});
 if (exportFiles) 
-    exportfig(gcf,[figureDirectory '/MRI_enrollment_by_category.eps'],'Color','rgb');
+    exportfig(gcf,[outputDirectory '/MRI_enrollment_by_category.eps'],'Color','rgb');
 else
     pause(.1);
     drawnow;
 end
 
-% plot z-score for T2* data
-zscore = [];
+% 20220210 MCS - fix issue where zscores ended up sorted by gestational day b/c categoryFit x/y were used from compareModelFit
+zscores = [];
 
-for idx=1:2
-    if (idx==1)
-        ff = categoryFit.T2s;
-        suffix = '';
-    else
-        ff = categoryFit.T2s_corr;
-        suffix = '_corrected';
+for idx=1:4
+    switch idx
+        case 1
+            zmasks = categoryMasks;
+            ff = categoryFit.T2s;
+            suffix = '_base';
+        case 2
+            zmasks = categoryMasks;
+            ff = categoryFit.T2s_corr;
+            suffix = '_corrected';
+        case 3
+            zmasks = ohsuCategoryMasks;
+            ff = ohsuCategoryFit.T2s;
+            suffix = '_OHSU';
+        case 4
+            zmasks = utahCategoryMasks;
+            ff = utahCategoryFit.T2s;
+            suffix = '_Utah';
     end
     
     [~,uidx] = unique(ff(1).x);
     
-    zscore{1} = (ff(1).y-ff(1).fit)./(0.25*(ff(1).predhi-ff(1).predlo));
-    zscore{2} = (ff(2).y-ff(1).f(ff(1).beta,ff(2).x))./interp1(ff(1).x(uidx),0.25*(ff(1).predhi(uidx)-ff(1).predlo(uidx)),ff(2).x);
-    zscore{3} = (ff(3).y-ff(1).f(ff(1).beta,ff(3).x))./interp1(ff(1).x(uidx),0.25*(ff(1).predhi(uidx)-ff(1).predlo(uidx)),ff(3).x);
-    
     for jdx=1:3
-        if (idx==1)
-            categoryFit.T2s(jdx).zscore = zscore{jdx};
-        else
-            categoryFit.T2s_corr(jdx).zscore = zscore{jdx};
-        end
+        % need to generate model fit and interpolate +/- 2-sigma prediction intervals to compute zscores
+        zscores{jdx} = (medianT2s(zmasks{jdx})-ff(1).model(ff(1).beta,gestationalDay(zmasks{jdx})/7))./...
+                        interp1(ff(1).x(uidx),0.25*(ff(1).predhi(uidx)-ff(1).predlo(uidx)),gestationalDay(zmasks{jdx})/7);
+    end
+    
+    if (~isempty(suffix))
+        eval(['zscores' suffix '=zscores;']);
     end
     
     figure;
-    ph = plot(ff(1).x,zscore{1},'b.',ff(2).x,zscore{2},'r.',ff(3).x,zscore{3},'g.');
+    ph = plot(gestationalDay(zmasks{1})/7,zscores{1},'b.',...
+              gestationalDay(zmasks{2})/7,zscores{2},'r.',...
+              gestationalDay(zmasks{3})/7,zscores{3},'g.');
     set(gca,'ylim',[-6 6]);
     title(['T2* z-score by category ' suffix(2:end)]);
     xlabel('Gestational weeks at MRI');
     ylabel('z-score');
     legend(ph,{'Normal','Adverse','Abnormal'});
     if (exportFiles) 
-        exportfig(gcf,[figureDirectory '/T2s_zscore_by_category' suffix '.eps'],'Color','rgb');
+        exportfig(gcf,[outputDirectory '/T2s_zscore_by_category' suffix '.eps'],'Color','rgb');
     else
         pause(.1);
         drawnow;
@@ -1003,16 +1057,36 @@ for idx=1:2
     % z-score histograms by category
     figure;
     zbins=-6:.5:6;
-    h1=normalize(hist(zscore{1},zbins));
-    h2=normalize(hist(zscore{2},zbins));
-    h3=normalize(hist(zscore{3},zbins));
+    h1=normalize(hist(zscores{1},zbins));
+    h2=normalize(hist(zscores{2},zbins));
+    h3=normalize(hist(zscores{3},zbins));
     ph = plot(zbins,h1,'b',zbins,h2,'r',zbins,h3,'g');
     title(['T2* z-score by category ' suffix(2:end)]);
     xlabel('z-score');
     ylabel('relative frequency');
     legend(ph,{'Normal','Adverse','Abnormal'});
     if (exportFiles) 
-        exportfig(gcf,[figureDirectory '/zscore_histogram_by_category' suffix '.eps'],'Color','rgb');
+        exportfig(gcf,[outputDirectory '/zscore_histogram_by_category' suffix '.eps'],'Color','rgb');
+    else
+        pause(.1);
+        drawnow;
+    end
+
+    % bar plot version
+    figure;
+    h1=histogram(zscores{1},15,'Normalization','pdf','BinWidth',.5,'DisplayStyle','stairs');
+    hold on;
+    h3=histogram(zscores{3},15,'Normalization','pdf','BinWidth',.5,'DisplayStyle','stairs');
+    h2=histogram(zscores{2},15,'Normalization','pdf','BinWidth',.5,'DisplayStyle','stairs');
+    hold off;
+    ph = [h1;h2;h3];
+    set(gca,'xlim',[-6 6]);
+    title(['T2* z-score by category ' suffix(2:end)]);
+    xlabel('z-score');
+    ylabel('relative frequency');
+    legend(ph,{'Normal','Adverse','Abnormal'});
+    if (exportFiles) 
+        exportfig(gcf,[outputDirectory '/zscore_histogram_by_category' suffix '.eps'],'Color','rgb');
     else
         pause(.1);
         drawnow;
@@ -1023,7 +1097,7 @@ end
 zscore = NaN(size(medianT2s));
 
 for idx=1:3
-    zscore(categoryMasks{idx}) = categoryFit.T2s(idx).zscore;
+    zscore(categoryMasks{idx}) = zscores_base{idx};
 end
 
 % compute T2* percentile from z-score
@@ -1032,6 +1106,7 @@ normalDistribution = makedist('Normal',0,1);
 T2sPercentile = cdf(normalDistribution,zscore)*100;
 
 % histograms of T2* percentiles (should be uniform in ideal case)
+% T2sBins = 5:10:95;
 T2sBins = 2.5:5:97.5;
 T2sHistogram = [];
 
@@ -1039,10 +1114,13 @@ for idx=1:3
     T2sHistogram(idx,:) = normalize(hist(T2sPercentile(categoryMasks{idx}),T2sBins)); 
     T2sHistogram(3+idx,:) = normalize(hist(T2sPercentile(ohsuCategoryMasks{idx}),T2sBins)); 
     T2sHistogram(6+idx,:) = normalize(hist(T2sPercentile(utahCategoryMasks{idx}),T2sBins)); 
+%     T2sHistogram(idx,:) = histogram(T2sPercentile(categoryMasks{idx}),20,'Normalization','pdf','BinWidth',5); 
+%     T2sHistogram(3+idx,:) = histogram(T2sPercentile(ohsuCategoryMasks{idx}),20,'Normalization','pdf','BinWidth',5); 
+%     T2sHistogram(6+idx,:) = histogram(T2sPercentile(utahCategoryMasks{idx}),20,'Normalization','pdf','BinWidth',5); 
 end
 
 figure;
-ph = bar(T2sBins,T2sHistogram(1:3,:),'stacked');
+ph = bar(T2sBins,T2sHistogram(1:3,:)','stacked');
 ph(1).FaceColor=[0 0 1];
 ph(2).FaceColor=[1 0 0];
 ph(3).FaceColor=[0 1 0];
@@ -1051,7 +1129,39 @@ xlabel('Percentile');
 ylabel('Relative frequency');
 legend(ph,{'Normal','Adverse','Abnormal'});
 if (exportFiles)
-    exportfig(gcf,[figureDirectory '/T2s_percentile_histogram_by_category.eps'],'Color','rgb');
+    exportfig(gcf,[outputDirectory '/T2s_percentile_histogram_by_category.eps'],'Color','rgb');
+else
+    pause(.1);
+    drawnow;
+end
+
+figure;
+ph = bar(T2sBins,T2sHistogram(4:6,:)','stacked');
+ph(1).FaceColor=[0 0 1];
+ph(2).FaceColor=[1 0 0];
+ph(3).FaceColor=[0 1 0];
+title('Relative distribution of T2* percentiles by category (OHSU)');
+xlabel('Percentile');
+ylabel('Relative frequency');
+legend(ph,{'Normal','Adverse','Abnormal'});
+if (exportFiles)
+    exportfig(gcf,[outputDirectory '/T2s_percentile_histogram_by_category_OHSU.eps'],'Color','rgb');
+else
+    pause(.1);
+    drawnow;
+end
+
+figure;
+ph = bar(T2sBins,T2sHistogram(7:9,:)','stacked');
+ph(1).FaceColor=[0 0 1];
+ph(2).FaceColor=[1 0 0];
+ph(3).FaceColor=[0 1 0];
+title('Relative distribution of T2* percentiles by category (Utah)');
+xlabel('Percentile');
+ylabel('Relative frequency');
+legend(ph,{'Normal','Adverse','Abnormal'});
+if (exportFiles)
+    exportfig(gcf,[outputDirectory '/T2s_percentile_histogram_by_category_Utah.eps'],'Color','rgb');
 else
     pause(.1);
     drawnow;
@@ -1059,6 +1169,7 @@ end
 
 % histograms of birthweight percentiles
 birthweightBins = 5:10:95;
+% birthweightBins = 2.5:5:97.5;
 
 for sidx=1:3
     switch sidx
@@ -1080,7 +1191,7 @@ for sidx=1:3
     end
 
     figure;
-    ph = bar(birthweightBins,birthWeightHistogram,'stacked');
+    ph = bar(birthweightBins,birthWeightHistogram','stacked');
     ph(1).FaceColor=[0 0 1];
     ph(2).FaceColor=[1 0 0];
     ph(3).FaceColor=[0 1 0];
@@ -1089,7 +1200,7 @@ for sidx=1:3
     ylabel('Relative frequency');
     legend(ph,{'Normal','Adverse','Abnormal'});
     if (exportFiles)
-        exportfig(gcf,[figureDirectory '/birthweight_percentile_histogram_by_category' fileSuffix '.eps'],'Color','rgb');
+        exportfig(gcf,[outputDirectory '/birthweight_percentile_histogram_by_category' fileSuffix '.eps'],'Color','rgb');
     else
         pause(.1);
         drawnow;
@@ -1149,13 +1260,14 @@ outputTable.adverseMask = categoryMasks{2};
 outputTable.abnormalMask = categoryMasks{3};
 outputTable.ohsuMask = ohsuMask;
 outputTable.utahMask = utahMask;
+outputTable.placentalVolume = placentalVolume;
 
 outputStruct = table2struct(outputTable);
 
 outputFields = fieldnames(outputStruct);
 
 if (exportFiles)
-    save([rootDirectory '/U01_summaryData.mat'],'outputTable','outputStruct','outputFields');
+    save([outputDirectory '/U01_summaryData.mat'],'outputTable','outputStruct','outputFields');
 end
 
 % need to transpose all fields to write to xlsx
@@ -1166,7 +1278,7 @@ for i=1:length(f)
 end
 
 if (exportFiles)
-    writetable(struct2table(outputStruct),[rootDirectory '/U01_summaryData.xlsx']);
+    writetable(struct2table(outputStruct),[outputDirectory '/U01_summaryData.xlsx']);
 end
 
 % demographics
@@ -1197,42 +1309,54 @@ for idx=1:length(demographics)
     end
 end
 
-msk = categoryMasks{2} & scanIndex==1;
-% msk = ohsuCategoryMasks{2} & scanIndex==1;
-% msk = utahCategoryMasks{2} & scanIndex==1;
+for idx=1:3
+    switch idx
+        case 1
+            msk = categoryMasks{2} & scanIndex==1; 
+            tmpName = 'All';
+        case 2
+            msk = ohsuCategoryMasks{2} & scanIndex==1;
+            tmpName = 'OHSU';
+        case 3
+            msk = utahCategoryMasks{2} & scanIndex==1;
+            tmpName = 'Utah';
+    end
 
-spl = int32([demographics(msk).stillbirth_pregnancy_loss])-48;
-oth = int32([demographics(msk).other_outcomes])-48;
-htn = int32([demographics(msk).hypertensive_diagnosis])-48;
-ptm = [demographics(msk).preterm];
+    spl = int32([demographics(msk).stillbirth_pregnancy_loss])-48;
+    oth = int32([demographics(msk).other_outcomes])-48;
+    htn = int32([demographics(msk).hypertensive_diagnosis])-48;
+    ptm = [demographics(msk).preterm];
 
-demographicData = struct('PIH',sum(sum(htn([2 3 4 5 7],:)>0)),...
-                         'GHTN',sum(htn(7,:),2),...
-                         'PEWO',sum(htn(4,:),2),...
-                         'PEW',sum(sum(htn([2 3 5],:))),...
-                         'SGA',sum([demographics(msk).sga]),...
-                         'SBFL',sum(spl(:)),...
-                         'PA',sum(oth(2,:)),...
-                         'PIHSGA',sum(sum(htn([2 3 4 5 7],:))>0&[demographics(msk).sga]),...
-                         'PB',sum(ptm));
+    demographicData = struct('PIH',sum(sum(htn([2 3 4 5 7],:)>0)),...
+                             'GHTN',sum(htn(7,:),2),...
+                             'PEWO',sum(htn(4,:),2),...
+                             'PEW',sum(sum(htn([2 3 5],:))),...
+                             'SGA',sum([demographics(msk).sga]),...
+                             'SBFL',sum(spl(:)),...
+                             'PA',sum(oth(2,:)),...
+                             'PIHSGA',sum(sum(htn([2 3 4 5 7],:))>0&[demographics(msk).sga]),...
+                             'PB',sum(ptm));
 
-valpct = @(x)[num2str(x) ' (' num2str(100*x/sum(msk)) ')'];
-mnsd = @(x)[nanmean(x) nanstd(x)];
+    valpct = @(x)[num2str(x) ' (' num2str(100*x/sum(msk)) ')'];
+    mnsd = @(x)[nanmean(x) nanstd(x)];
+    
+    disp(tmpName);
 
-disp(['PIH : ' valpct(demographicData.PIH)]);
-disp(['Gestational HTN : ' valpct(demographicData.GHTN)]);
-disp(['Pre-e w/o sev : ' valpct(demographicData.PEWO)]);
-disp(['Pre-e w/sev : ' valpct(demographicData.PEW)]);
-disp(['SGA : ' valpct(demographicData.SGA)]);
-disp(['Stillbirth or fetal loss : ' valpct(demographicData.SBFL)]);
-disp(['Placental abruption : ' valpct(demographicData.PA)]);
-disp(['Both PIH and SGA : ' valpct(demographicData.PIHSGA)]);
-disp(['Preterm birth <37 weeks : ' valpct(demographicData.PB)]);
+    disp(['    PIH : ' valpct(demographicData.PIH)]);
+    disp(['    Gestational HTN : ' valpct(demographicData.GHTN)]);
+    disp(['    Pre-e w/o sev : ' valpct(demographicData.PEWO)]);
+    disp(['    Pre-e w/sev : ' valpct(demographicData.PEW)]);
+    disp(['    SGA : ' valpct(demographicData.SGA)]);
+    disp(['    Stillbirth or fetal loss : ' valpct(demographicData.SBFL)]);
+    disp(['    Placental abruption : ' valpct(demographicData.PA)]);
+    disp(['    Both PIH and SGA : ' valpct(demographicData.PIHSGA)]);
+    disp(['    Preterm birth <37 weeks : ' valpct(demographicData.PB)]);
+end
 
 % compute p-values using chi-square test from prop_test.m
 
 % racial background
-racial_backgrounds = {'White','African Descent','Native American','Asian Indian','Other Asian','Native Hawaiian','Pacific Islander','Other','Refuse','Hispanic'}
+racial_backgrounds = {'White','African Descent','Native American','Asian Indian','Other Asian','Native Hawaiian','Pacific Islander','Other','Refuse','Hispanic'};
 
 for idx=1:3
     switch idx
@@ -1268,6 +1392,91 @@ for idx=1:3
     end
 end
 
+maskPairNames = {'Control vs. Adverse','Control vs. Abnormal','Adverse vs. Abnormal',...
+                 'OHSU Control vs. Adverse','OHSU Control vs. Abnormal','OHSU Adverse vs. Abnormal',...
+                 'Utah Control vs. Adverse','Utah Control vs. Abnormal','Utah Adverse vs. Abnormal',...
+                 'OHSU vs. Utah Control','OHSU vs. Utah Adverse','OHSU vs. Utah Abnormal'};
+maskPairList = {{controlMask,adverseMask},...
+                {controlMask,abnormalMask},...
+                {adverseMask,abnormalMask},...
+                {ohsuMask&controlMask,ohsuMask&adverseMask},...
+                {ohsuMask&controlMask,ohsuMask&abnormalMask},...
+                {ohsuMask&adverseMask,ohsuMask&abnormalMask},...
+                {utahMask&controlMask,utahMask&adverseMask},...
+                {utahMask&controlMask,utahMask&abnormalMask},...
+                {utahMask&adverseMask,utahMask&abnormalMask},...
+                {ohsuMask&controlMask,utahMask&controlMask},...
+                {ohsuMask&adverseMask,utahMask&adverseMask},...
+                {ohsuMask&abnormalMask,utahMask&abnormalMask}};
+
+variablesToAnalyze = {'Birthweight percentile','Pre-pregnancy BMI','Delivery BMI','Maternal age'};
+variablesList = {birthWeightPercentile, prepregnancyBMI, deliveryBMI, maternalAge};
+
+variableValues = [];
+
+for jdx=1:length(variablesToAnalyze)
+    currentVariable = variablesList{jdx};
+
+    disp(variablesToAnalyze{jdx});
+
+    for idx=1:length(maskPairNames)
+        currentMaskPair = maskPairList{idx};
+    
+        % only analyze one data point - will be replicated for studies with multiple scans
+        [p,d,c] = pValueAndCohenD(currentVariable(currentMaskPair{1}&scanIndex==1),currentVariable(currentMaskPair{2}&scanIndex==1));
+    
+        variableValues(jdx,idx,:) = [p d c];
+
+        disp([sprintf('\t%30s',maskPairNames{idx}) ' p=' sprintf('%5.3f',p) ' d=' sprintf('%4.2f',d) ' [' sprintf('%5.2f',c(1)) ' vs. ' sprintf('%5.2f',c(2)) ']']);
+    end
+
+    disp('');
+end
+
+% tabulate physiology stats
+% interleaveColumns(squeeze(variableValues(1,:,:,3)),squeeze(variableValues(1,:,:,4)),squeeze(variableValues(1,:,:,1)),squeeze(variableValues(1,:,:,2)));
+
+% variables that are measured at each GTP
+variablesToAnalyze = {'zscore','Hemoglobin','SpO2'};
+variablesList = {zscore, hemoglobin, SpO2Pre};
+
+variableValues = [];
+
+for jdx=1:length(variablesToAnalyze)
+    currentVariable = variablesList{jdx};
+
+    disp(variablesToAnalyze{jdx});
+
+    % gestational time points
+    for gtpidx=0:3
+        disp([sprintf('\tGTP %1d',gtpidx)]);
+        
+        for idx=1:length(maskPairNames)
+            currentMaskPair = maskPairList{idx};
+    
+            currentMask1 = currentMaskPair{1};
+            currentMask2 = currentMaskPair{2};
+
+            if (gtpidx>0)
+                currentMask1 = currentMask1&gestationalTP==gtpidx;
+                currentMask2 = currentMask2&gestationalTP==gtpidx;
+            end
+
+            % only analyze one data point - will be replicated for studies with multiple scans
+            [p,d,c] = pValueAndCohenD(currentVariable(currentMask1),currentVariable(currentMask2),'false');
+
+            variableValues(jdx,gtpidx+1,idx,:) = [p d c];
+        
+            disp([sprintf('\t\t%30s',maskPairNames{idx}) ' p=' sprintf('%5.3f',p) ' d=' sprintf('%4.2f',d) ' [' sprintf('%5.2f',c(1)) ' vs. ' sprintf('%5.2f',c(2)) ']']);
+        end
+
+        disp('');
+    end
+end
+
+% % tabulate z-score stats
+% interleaveColumns(squeeze(zValues(1,:,:,3)),squeeze(zValues(1,:,:,4)),squeeze(zValues(1,:,:,1)),squeeze(zValues(1,:,:,2)));
+
 % % push postprocessed values to REDCap
 % % for idx=794:794
 % for idx=1:length(studyIDs)
@@ -1292,3 +1501,65 @@ end
 %         disp(['U01_redcap_update.py for ' rcstudyID ' ' rcstudyDate ' complete']);
 %     end
 % end
+
+% % load sub-sampling test data sets and analyze
+% sliceNumbers=[1 2 3 4 5 6 7 8 9 10 11];
+% rr=[];
+% qd=[];
+% 
+% load U01_postprocessed_data.mat medianT2s
+% medianT2s_all=medianT2s;
+% 
+% for jdx=1:length(sliceNumbers) 
+%     idx=sliceNumbers(jdx); 
+%     
+%     if (idx>1) 
+%         suffix='s'; 
+%     else
+%         suffix='';
+%     end
+%     
+%     load(['U01_postprocessed_data_' num2str(idx) '_slice' suffix],'medianT2s');
+%     eval(['medianT2s_' num2str(idx) '=medianT2s;']);
+%     delta=medianT2s_all(:)-medianT2s(:);
+%     rr(jdx)=sqrt(nanmean(delta.^2));
+%     qd(jdx,:)=nanquantile(delta,[.01 .05 .1 .25 .5 .75 .9 .95 .99]);
+%     jdx=jdx+1;
+% end
+%
+% loglog(sliceNumbers,qd,'*-')
+% 
+% cmap=Colormap.generate([1 0 0],[0 0 1],10);
+% 
+% figure;
+% hold on;
+% for idx=1:size(medianT2s_SS,1) 
+%     h=plot(medianT2s,medianT2s_SS(idx,:),'.');
+%     set(h,'Color',cmap(idx,:));
+% end
+% plot(medianT2s,medianT2s,'g.');
+% hold off;
+% set(gca,'xlim',[0 140],'ylim',[0 140]);
+% axis square;
+% exportfig(gcf,'Subsampling_scatter_plot.eps','Color','rgb')
+% 
+% % should get ROC AUCs from postprocessed data
+% % roc_SS=[.642 .747 .666;.656 .750 .701;.666 .764 .677;.670 .768 .685;.668 .755 .686;.664 .766 .686;.676 .759 .683;.670 .768 .686;.673 .760 .684;.672 .772 .681;.675 .765 .684];
+% % figure;plot(roc_SS,'o-')
+% exportfig(gcf,'HPP2021_presentation/ROC_SS_GTP_1-3.eps','Color','rgb')
+% figure;plot(1:10,sqrt(nanmean((medianT2s_SS-medianT2s).^2,2)),'o-')
+% figure;loglog(1:10,sqrt(nanmean((medianT2s_SS-medianT2s).^2,2)),'o-')
+% exportfig(gcf,'HPP2021_presentation/Subsampling_RMSE.eps','Color','rgb')
+% figure;hist(floor(gad(scanIndex==1&controlMask)/7),12:42)
+% exportfig(gcf,'HPP2021_presentation/GAD_hist_UN.eps','Color','rgb')
+% figure;hist(floor(gad(scanIndex==1&adverseMask)/7),12:42)
+% exportfig(gcf,'HPP2021_presentation/GAD_hist_PA.eps','Color','rgb')
+% figure;hist(floor(gad(scanIndex==1&abnormalMask)/7),12:42)
+% exportfig(gcf,'HPP2021_presentation/GAD_hist_SA.eps','Color','rgb')
+
+% % generate R2* histograms
+% R2s_histograms = zeros([size(T2s_histograms,1) length(binsR2s)]);
+% for idx=1:length(T2s_all) 
+%     R2s_histograms(idx,:)=hist(1./T2s_all{idx},binsR2s);
+% end
+
