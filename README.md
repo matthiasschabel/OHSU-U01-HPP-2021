@@ -1,6 +1,6 @@
 # OHSU-U01-HPP-2021
 MATLAB source code and post-processed MRI data for analysis of in vivo placental T2* mapping in pregnant human study participants as described
-in this manuscript: [Quantitative longitudinal T2* mapping for assessing placental function and association with adverse pregnancy outcomes across gestation](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0270360). A presentation on this project at the 2021 NIH Human Placenta Project Meeting can be found at 1:36:00 [here](https://videocast.nih.gov/watch=42033?jwsource=cl) and the PowerPoint slides for that presentation can be downloaded [here](https://www.dropbox.com/s/0bf2u1jhlm2yalr/202105%20HPP.pptx?dl=0).
+in this manuscript: [Quantitative longitudinal T2* mapping for assessing placental function and association with adverse pregnancy outcomes across gestation](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0270360). A presentation on this project at the 2021 NIH Human Placenta Project Meeting can be found at 1:36:00 [here](https://videocast.nih.gov/watch=42033?jwsource=cl) and the PowerPoint slides for that presentation can be downloaded [here](https://www.dropbox.com/scl/fi/3k6c9wynn7lvdym853z5d/202105-HPP.pptx?rlkey=q7tl4l34p28ibm4lu6hg9xrgv&dl=0).
 
 Research was supported by the NICHD Human Placenta Project U01 HD087182 (Frias)
 
@@ -12,7 +12,7 @@ Add all .m files in the ```src``` directory to the MATLAB path and save.
 
 ## Instructions for use
 
-(1) Download the post-processed study data file [U01_postprocessed_data.mat](https://www.dropbox.com/s/01pastzz5qw7elt/U01_postprocessed_data.mat?dl=0). This data set is copyrighted and may not be used for academic research or commercial purposes without written permission. Please contact [Matthias Schabel](schabelm@ohsu.edu) with questions or requests.
+(1) Download the post-processed study data file [U01_postprocessed_data.mat](https://www.dropbox.com/scl/fi/p094jba7k00r2rk2t3l1h/U01_postprocessed_data.mat?rlkey=kam23iftl2n560044nrji0h4e&dl=0). Summary data in Excel format for all participants/scans can be downloaded [here](https://www.dropbox.com/scl/fi/63dbddtrwmul0ttg1zyzq/U01_summaryData.xlsx?rlkey=fhckv71gugfvn72fsefhim9zp&dl=0). This data set is copyrighted and may not be used for academic research or commercial purposes without written permission. Please contact [Matthias Schabel](schabelm@ohsu.edu) with questions or requests.
 
 (2) Load study data into the MATLAB workspace (```load U01_postprocessed_data```). The data file is approximately 1.3GB in size, so this may take a couple of minutes to complete. 
 
